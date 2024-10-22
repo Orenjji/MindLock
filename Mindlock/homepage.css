@@ -1,0 +1,24 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to right, #2C3E50, #8E44AD); /* Midnight Blue to Electric Purple gradient */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+h1 {
+    position: fixed; 
+    top: 0;         
+    left: 50%;       
+    transform: translateX(-50%); 
+    color: #FFFFFF;
+    margin: 0;       
+    padding: 20px;   
+    background-color: #395c7e;
+    width: 100%;     
+    text-align: center;
+    z-index: 999;    
+}
