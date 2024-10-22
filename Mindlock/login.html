@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindlock Authentication System</title>
+    <link rel="stylesheet" href="login.css"> <!-- Link to the external CSS file -->
+</head>
+<body>
+
+    <h1>Mindlock Authentication System</h1>
+    <div class="container">
+        <form id="loginForm">
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Sub01, Sub02, ..." required>
+            <span id="usernameError" class="error"></span>
+
+            <label for="fileUpload">Upload EEG File</label>
+            <input type="file" id="fileUpload" accept=".fif" required>
+            <span class="file-upload-text">.fif file only</span>
+            <span id="fileError" class="error"></span>
+
+            <button type="submit">Submit</button>
+
+            <span id="loginMessage" class="error"></span>
+        </form>
+    </div>
+
+    <!-- Pop-up Modal -->
+    <div id="fileModal" class="modal">
+        <div class="modal-content">
+            <p>Only .fif files are allowed.</p>
+            <button id="closeModal">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const validUsername = "Sub01";
+        const validFileName = "eeg_data_sub01.fif"; // expected .fif file name
+
+        // Form validation
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // prevent form from submitting by default
+
+            const usernameInput = document.getElementById('username').value.trim();
+            const fileInput = document.getElementById('fileUpload').files[0];
+            const usernameError = document.getElementById('usernameError');
+            const fileError = document.getElementById('fileError');
+            const loginMessage = document.getElementById('loginMessage');
+            const fileModal = document.getElementById('fileModal'); // modal reference
+            const closeModal = document.getElementById('closeModal'); // close button
+
+            let isValid = true;
+
+            // Clear previous errors
+            usernameError.textContent = '';
+            fileError.textContent = '';
+            loginMessage.textContent = '';
+
+            // Validate username format (must start with "Sub" followed by a number)
+            const usernameRegex = /^Sub\d+$/;
+            if (!usernameRegex.test(usernameInput)) {
+                usernameError.textContent = 'Username must be in format "Sub" followed by a number (e.g., Sub01)';
+                isValid = false;
+            }
+
+            // Validate file type and presence
+            if (!fileInput) {
+                fileError.textContent = 'Please upload a .fif file.';
+                isValid = false;
+            } else if (fileInput.name.split('.').pop().toLowerCase() !== 'fif') {
+                // Show pop-up modal for invalid file type
+                fileModal.style.display = 'block';
+                isValid = false;
+            }
+
+            // Proceed only if both username and file inputs are valid
+            if (isValid) {
+                // Check if username and file name match the expected values (for demo)
+                if (usernameInput === validUsername && fileInput.name === validFileName) {
+                    // Redirect to homepage.html on successful login
+                    window.location.href = 'homepage.html';
+                } else {
+                    // Show login failure message
+                    loginMessage.textContent = 'Login unsuccessful. Username and/or file mismatch.';
+                }
+            }
+
+            // Close modal when "Close" button is clicked and clear form inputs
+            closeModal.addEventListener('click', function() {
+                fileModal.style.display = 'none';
+                document.getElementById('username').value = '';  // Clear the username input
+                document.getElementById('fileUpload').value = '';  // Clear the file input
+            });
+        });
+    </script>
+
+</body>
+</html>
