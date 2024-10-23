@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload Registration</title>
+    <link rel="stylesheet" href="register.css"> <!-- Link to your external CSS file -->
+</head>
+<body>
+    <div class="upload-container">
+        <form id="uploadForm">
+            <label for="fileUpload">Upload a File (.fif only)</label>
+            <input type="file" id="fileUpload" accept=".fif"> <!-- Restrict file input to .fif files -->
+        </form>
+        
+        <p class="guide-text">If you have an account, then click the Login button.</p>
+
+        <button onclick="submitFile()" class="submit-button">Submit</button>
+        <button onclick="window.location.href='login.html'" class="login-button">Login</button>
+    </div>
+
+    <!-- Pop-up Modal -->
+    <div id="fileModal" class="modal">
+        <div class="modal-content">
+            <p>Please upload a .fif file.</p>
+            <button id="closeModal">Close</button>
+        </div>
+    </div>
+
+    <script>
+        function submitFile() {
+            const fileInput = document.getElementById('fileUpload');
+            const file = fileInput.files[0];
+            const fileModal = document.getElementById('fileModal'); // modal reference
+            const closeModal = document.getElementById('closeModal'); // close button
+
+            if (!file) {
+                // Show the pop-up modal for missing file
+                fileModal.style.display = 'block';
+            } else if (file.name.split('.').pop().toLowerCase() !== 'fif') {
+                alert("Only .fif files are allowed."); // Keep the alert for file type validation
+            } else {
+                // Add your file submission logic here
+                alert("File submitted successfully!"); // Placeholder alert for demonstration
+            }
+
+            // Close modal when "Close" button is clicked
+            closeModal.addEventListener('click', function() {
+                fileModal.style.display = 'none';
+            });
+        }
+    </script>
+</body>
+</html>
