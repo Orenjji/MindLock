@@ -1,0 +1,163 @@
+/* Global Styles */
+/* https://www.geeksforgeeks.org/colour-wheel-of-cyber-security/ link of inspired color palette*/
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to right, #2C3E50, #8E44AD); /* Midnight Blue to Electric Purple gradient */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+h1 {
+    position: fixed; 
+    top: 0;         
+    left: 50%;       
+    transform: translateX(-50%); 
+    color: #FFFFFF;
+    margin: 0;       
+    padding: 20px;   
+    background-color: #395c7e; 
+    width: 100%;     
+    text-align: center;
+    z-index: 999;    
+}
+
+.Login_Container {
+    position: absolute;
+    top: 24%;
+    background-color: rgb(255, 255, 255); 
+    padding: 10px 15px 30px 15px;
+    border-radius: 15px;
+    
+}
+
+.Login_Container a {
+    text-decoration: none;
+    color: #2a435c; 
+    font-weight: bold;
+}
+
+.Registration_Container {
+    position: absolute;
+    top: 24%;
+    margin-left: 70px;
+    background-color: rgba(255, 255, 255, 0.884); 
+    padding: 10px 20px 30px 20px;
+    border-radius: 15px;
+        
+}
+
+.Registration_Container a {
+    text-decoration: none;
+    color: #2a435c; 
+    font-weight: bold;
+}
+
+/* Form Container */
+.container {
+    background-color: rgb(255, 255, 255); 
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 400px;
+}
+
+/* Form Elements */
+label {
+    color: #2a435c; 
+    font-weight: bold;
+}
+
+input[type="text"], 
+input[type="file"] {
+    padding: 10px;
+    margin: 8px 0;
+    display: block;
+    width: 100%;
+    border: 2px solid #3498DB; 
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 16px;
+    transition: all 0.3s ease-in-out;
+}
+
+input[type="text"]:focus, 
+input[type="file"]:focus {
+    border-color: #1ABC9C;
+    outline: none;
+    box-shadow: 0 0 5px rgba(26, 188, 156, 0.7); 
+}
+
+/* Button */
+button {
+    background-color: #3498DB; 
+    color: #FFFFFF; 
+    padding: 12px;
+    margin-top: 15px;
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #1ABC9C;
+}
+
+/* Error Styling */
+.error {
+    color: #E74C3C;
+    font-size: 14px;
+    margin-top: -8px;
+    margin-bottom: 10px;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); 
+}
+
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 15px;
+    width: 80%;
+    max-width: 400px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+#closeModal {
+    background-color: #3498DB;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#closeModal:hover {
+    background-color: #1ABC9C; 
+}
+
+/* Additional Input Styles */
+.file-upload-text {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 10px;
+}

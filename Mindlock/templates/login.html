@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindlock Authentication System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Mindlock Authentication System</h1>
+        <div class="Login_Container">
+            <a href="login.html">LOGIN</a>
+        </div>
+        <div class="Registration_Container">
+            <a href="register.html">REGISTER</a>
+        </div>
+    </header>
+    <div class="container">
+        <form id="loginForm" method="POST" enctype="multipart/form-data">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" placeholder="sub001, sub002, ..." required>
+            <span id="usernameError" class="error">{{ get_flashed_messages(with_categories=true) }}</span>
+            <label for="fileUpload">Upload EEG File</label>
+            <input type="file" id="fileUpload" name="fileUpload" accept=".fif" required>
+            <span class="file-upload-text">.fif file only</span>
+            <span id="fileError" class="error"></span>
+            <button type="submit">Submit</button>
+            <span id="loginMessage" class="error">{{ get_flashed_messages() }}</span>
+        </form>
+    </div>
+    <!-- Pop-up Modal -->
+    <div id="fileModal" class="modal">
+        <div class="modal-content">
+            <p>Only .fif files are allowed.</p>
+            <button id="closeModal">Close</button>
+        </div>
+    </div>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const fileInput = document.getElementById('fileUpload').files[0];
+
+            // Validate form inputs
+            if (!username || !fileInput || fileInput.name.split('.').pop().toLowerCase() !== 'fif') {
+                document.getElementById('loginMessage').textContent = 'Please enter a valid username and upload a .fif file.';
+                return;
+            }
+
+            // Prepare the form data
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('file', fileInput);
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    window.location.href = 'homepage.html';
+                } else {
+                    document.getElementById('loginMessage').textContent = result.message || 'Login unsuccessful';
+                }
+            } catch (error) {
+                document.getElementById('loginMessage').textContent = 'Error: Unable to authenticate. Please try again.';
+                console.error('Error:', error);
+            }
+        });
+
+        // Modal handling
+        document.getElementById('closeModal').addEventListener('click', function() {
+            document.getElementById('fileModal').style.display = 'none';
+            document.getElementById('username').value = '';  // Clear the username input
+            document.getElementById('fileUpload').value = '';  // Clear the file input
+        });
+    </script>
+</body>
+</html>

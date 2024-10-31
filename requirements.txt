@@ -1,0 +1,10 @@
+mne
+scipy
+pyqt5
+numpy
+matplotlib
+pandas
+tensorflow
+joblib
+flask
+flask-cors
