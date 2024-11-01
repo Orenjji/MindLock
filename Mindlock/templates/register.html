@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>File Upload Registration</title>
-    <link rel="stylesheet" href="register.css"> <!-- Link to your external CSS file -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='register.css') }}"> <!-- Link to your external CSS file -->
 </head>
 <body>
     <header>
         <h1>Mindlock Authentication System</h1> 
         <div class="Login_Container">
-            <a href="login.html">LOGIN</a>
+            <a href="{{ url_for('login') }}">LOGIN</a>
         </div>
         <div class="Registration_Container">
-            <a href="register.html">REGISTER</a>
+            <a href="{{ url_for('register') }}">REGISTER</a>
         </div>  
     </header>
 
@@ -26,7 +26,7 @@
         <p class="guide-text">If you have an account, then click the Login button.</p>
 
         <button onclick="submitFile()" class="submit-button">Submit</button>
-        <button onclick="window.location.href='login.html'" class="login-button">Login</button>
+        <button type="button" onclick="window.location.href='{{ url_for('login') }}'" class="login-button">Go to Login</button>
     </div>
 
     <!-- Pop-up Modal -->

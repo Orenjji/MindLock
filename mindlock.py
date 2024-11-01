@@ -3,28 +3,20 @@ import numpy as np
 import mne
 import joblib
 import tensorflow as tf
-from flask import Flask, request, jsonify, render_template
+from tensorflow.keras.models import load_model  # type: ignore
+from flask import Flask, request, jsonify, render_template, session, url_for
 from flask_cors import CORS
-import tempfile
-import scipy.io
-import matplotlib
-import pandas as pd
-import shutil
-from pathlib import Path
-from sklearn.svm import SVC
-from scipy.special import softmax
-
-matplotlib.use('Agg')
+import tempfile  # Import tempfile module
 
 app = Flask(__name__, static_folder='mindlock/static', template_folder='mindlock/templates')
 CORS(app)  # Enable CORS
 
-# Load pre-trained models (adjust the paths as necessary)
+# Load pre-trained models
 cnn_model_path = r'C:\Users\Vehuel\Downloads\Mindlock\for-train-model-1.keras'
 svm_model_path = r'C:\Users\Vehuel\Downloads\Mindlock\for-train-svm_model.pkl'
 
 try:
-    cnn_model = tf.keras.models.load_model(cnn_model_path)
+    cnn_model = load_model(cnn_model_path)
     print("CNN model loaded successfully.")
 except Exception as e:
     cnn_model = None
@@ -37,69 +29,113 @@ except Exception as e:
     svm_model = None
     print(f"Error loading SVM model: {e}")
 
-def predict_eeg(file_path, subject_id):
-    predictions = []
+def predict_eeg(file_path):
     try:
         # Load the .fif file with MNE
         raw = mne.read_epochs(file_path, preload=True)
-        # Convert the data to a NumPy array (selecting the required channels, e.g., first 64)
-        eeg_data = raw.get_data()[:64]  # Adjust according to your data
-        # Check if the data is in the expected shape
-        if eeg_data.ndim != 2:
-            return {'error': f'Expected 2D EEG data for {file_path}, got shape {eeg_data.shape}'}, 400
+
+        # Convert the data to a NumPy array (selecting the required channels)
+        eeg_data = raw.get_data()[:, :64, :]  # Select only the first 64 channels (adjust if necessary)
+        print(f"EEG data shape for {file_path}: {eeg_data.shape}")
+
+        # Reshape data for CNN (1, num_channels, num_timepoints)
+        if eeg_data.ndim == 3:
+            eeg_data = eeg_data.reshape(eeg_data.shape[0], 64, -1)  # Reshape to (num_epochs, 64, num_timepoints)
+        else:
+            return {'error': f'Expected 3D EEG data for {file_path}, got shape {eeg_data.shape}'}, 400
+
         # Check if models are loaded
         if cnn_model is None or svm_model is None:
             return {'error': 'Model not loaded properly'}, 500
+
         # Pass the EEG data through the CNN to extract features
         cnn_features = cnn_model.predict(eeg_data)
-        # Flatten the features for SVM input (to match the SVM training input shape)
         cnn_features = cnn_features.reshape(cnn_features.shape[0], -1)
+
         # Predict using the SVM model
         svm_decision_scores = svm_model.decision_function(cnn_features)
-        # Get the predicted class with the highest score
         predicted_class = np.argmax(svm_decision_scores)
-        # Convert the predicted class index to the subject format (sub001, sub002, ...)
         predicted_subject = f"sub{predicted_class + 1:03d}"
-        # Store the prediction
-        predictions.append(predicted_subject)
-        # Print the predicted subject for this file
-        print(f"Predicted subject for {file_path}: {predicted_subject}")
-        # Check if the predicted subject matches the entered subject ID
-        if predicted_subject == subject_id:
-            print(f"Username matches the predicted subject: {predicted_subject}")
-            return {'success': True, 'message': 'Login successful', 'predicted_subject': predicted_subject}, 200
-        else:
-            print(f"Username does not match the predicted subject: {predicted_subject}")
-            return {'success': False, 'message': 'Intruder detected', 'predicted_subject': predicted_subject}, 200
+
+        # Log the prediction in the desired format
+        print(f"Predicted subject for {os.path.basename(file_path)}: {predicted_subject}")
+        return {
+            'success': True,
+            'predicted_subject': predicted_subject,
+            'message': f'Prediction successful for {file_path}'
+        }, 200
     except Exception as e:
+        print(f"Error in prediction for {file_path}: {str(e)}")
         return {'error': str(e)}, 500
 
 @app.route('/')
 def home():
     return render_template('login.html')
 
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
+@app.route('/homepage')
+def homepage():
+    # Make sure to handle session for username
+    username = session.get('username', 'Guest')  # Default to 'Guest' if not logged in
+    return render_template('homepage.html', username=username)
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    # Your registration logic here
+    return render_template('register.html')  # or whatever your template is
+
+
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
+
     file = request.files['file']
-    subject_id = request.form.get('username')
+
+    try:
+        # Load the uploaded file directly into memory
+        raw = mne.read_epochs(file.stream, preload=True)
+
+        # Convert the data to a NumPy array (selecting the required channels)
+        eeg_data = raw.get_data()[:, :64, :]  # Select only the first 64 channels (adjust if necessary)
+        print(f"EEG data shape for uploaded file: {eeg_data.shape}")
+
+        # Reshape data for CNN (1, num_channels, num_timepoints)
+        if eeg_data.ndim == 3:
+            eeg_data = eeg_data.reshape(eeg_data.shape[0], 64, -1)  # Reshape to (num_epochs, 64, num_timepoints)
+        else:
+            return {'error': f'Expected 3D EEG data for uploaded file, got shape {eeg_data.shape}'}, 400
+
+        # Check if models are loaded
+        if cnn_model is None or svm_model is None:
+            return {'error': 'Model not loaded properly'}, 500
+
+        # Pass the EEG data through the CNN to extract features
+        cnn_features = cnn_model.predict(eeg_data)
+        cnn_features = cnn_features.reshape(cnn_features.shape[0], -1)
+
+        # Predict using the SVM model
+        svm_decision_scores = svm_model.decision_function(cnn_features)
+        predicted_class = np.argmax(svm_decision_scores)
+        predicted_subject = f"sub{predicted_class + 1:03d}"
+
+        # Print and return the predicted subject
+        print(f"Predicted subject for {file.filename}: {predicted_subject}")
+        return {
+            'success': True,
+            'predicted_subject': predicted_subject,
+            'uploaded_filename': file.filename,
+            'message': 'Login  successful'
+        }, 200
+
+    except Exception as e:
+        print(f"Error in prediction for uploaded file: {str(e)}")
+        return {'error': str(e)}, 500
     
-    if not subject_id:
-        return jsonify({'error': 'No username provided'}), 400
-    
-    # Create a temporary file
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        temp_file_path = temp_file.name
-        file.save(temp_file_path)
-    
-    result, status_code = predict_eeg(temp_file_path, subject_id)
-    
-    # Remove the temporary file after processing
-    if os.path.exists(temp_file_path):
-        os.remove(temp_file_path)
-    
-    return jsonify(result), status_code
+
 
 if __name__ == '__main__':
     app.run(debug=True)

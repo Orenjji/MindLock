@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home Page</title>
-    <link rel="stylesheet" href="homepage.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='homepage.css') }}"> <!-- Use Flask's url_for -->
 </head>
 <body>
     <header>
-       <h1>Welcome Sub01 to Mindlock!</h1> <!--sample of welcome user-->
+        <h1>Welcome, {{ username }}, to Mindlock!</h1><!--sample of welcome user-->
     </header>
 </body>
 </html>
