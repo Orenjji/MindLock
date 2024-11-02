@@ -6,7 +6,6 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model  # type: ignore
 from flask import Flask, request, jsonify, render_template, session, url_for
 from flask_cors import CORS
-import tempfile  # Import tempfile module
 
 app = Flask(__name__, static_folder='mindlock/static', template_folder='mindlock/templates')
 CORS(app)  # Enable CORS
