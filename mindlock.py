@@ -6,7 +6,7 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model  # type: ignore
 from flask import Flask, request, jsonify, render_template, session, url_for
 from flask_cors import CORS
-import tempfile  # Import tempfile module
+
 
 app = Flask(__name__, static_folder='mindlock/static', template_folder='mindlock/templates')
 CORS(app)  # Enable CORS
@@ -85,7 +85,7 @@ def homepage():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     # Your registration logic here
-    return render_template('register.html')  # or whatever your template is
+    return render_template('register.html')
 
 
 @app.route('/predict', methods=['POST'])
@@ -94,13 +94,43 @@ def predict():
         return jsonify({'error': 'No file uploaded'}), 400
 
     file = request.files['file']
+    
+    # Store the file in a variable (file object)
+    stored_file = file  # You can now use 'stored_file' to refer to the uploaded file
+    
+    print(f"File uploaded: {stored_file.filename}")
+
 
     try:
+
         # Load the uploaded file directly into memory
-        raw = mne.read_epochs(file.stream, preload=True)
+        raw = mne.io.read_raw_fif(stored_file, preload=True)
+        
+        raw.set_channel_types({'Marker': 'stim'})
+        montage = mne.channels.make_standard_montage('easycap-M1')
+        raw.set_montage(montage)
+        
+        events = mne.find_events(raw, stim_channel= 'Marker')
+        
+        raw.filter(l_freq=1.0, h_freq=30.0)
+        
+        unique_event_id = events[0, 2]
+        event_id = {f"Event_{unique_event_id}": unique_event_id}
+        
+        tmin = -0.2
+        tmax = 0.8
+        baseline = (None, 0)
+        
+        epochs = mne.Epochs(raw, 
+                            events = events,
+                            event_id = event_id,
+                            tmin = tmin,
+                            tmax = tmax,
+                            baseline = baseline,
+                            preload = True)
 
         # Convert the data to a NumPy array (selecting the required channels)
-        eeg_data = raw.get_data()[:, :64, :]  # Select only the first 64 channels (adjust if necessary)
+        eeg_data = epochs.get_data()[:, :64, :]  # Select only the first 64 channels (adjust if necessary)
         print(f"EEG data shape for uploaded file: {eeg_data.shape}")
 
         # Reshape data for CNN (1, num_channels, num_timepoints)
