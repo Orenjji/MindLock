@@ -1,3 +1,5 @@
+import base64
+import io
 import os
 import numpy as np
 import mne
@@ -6,9 +8,11 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model  # type: ignore
 from flask import Flask, request, jsonify, render_template, session, url_for
 from flask_cors import CORS
-
+from PIL import Image
+import tempfile
 
 app = Flask(__name__, static_folder='mindlock/static', template_folder='mindlock/templates')
+app.secret_key = os.urandom(24)  # Add a secret key here
 CORS(app)  # Enable CORS
 
 # Load pre-trained models
@@ -28,6 +32,49 @@ try:
 except Exception as e:
     svm_model = None
     print(f"Error loading SVM model: {e}")
+    
+# Function to resize and compress the image and save it temporarily
+def resize_image(fig, max_size=(500, 500)):
+    # Save the figure to a temporary file in PNG format
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_file:
+        tmp_file_path = tmp_file.name
+        fig.savefig(tmp_file_path, format='png', dpi=150)
+    
+    # Open image with PIL
+    img = Image.open(tmp_file_path)
+
+    # Resize image
+    img.thumbnail(max_size)
+
+    # Save resized image to a temporary buffer
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_resized_file:
+        img.save(tmp_resized_file, format='PNG')
+        tmp_resized_file_path = tmp_resized_file.name
+    
+    # Read the resized image into memory and convert it to Base64
+    with open(tmp_resized_file_path, 'rb') as f:
+        img_base64 = base64.b64encode(f.read()).decode('utf-8')
+    
+    # Clean up temporary files
+    try:
+        os.remove(tmp_file_path)
+        os.remove(tmp_resized_file_path)
+    except Exception as e:
+        print(f"Error cleaning up temporary files: {e}")
+    
+    return img_base64
+    
+# Function to plot raw EEG data and return a compressed Base64 image
+def plot_raw_data(raw, filename, events):
+    fig = raw.plot(n_channels=64, scalings='auto', events=events, title=f"Raw EEG Data with Events: {filename}", show=False)
+    img_base64 = resize_image(fig)
+    return img_base64
+
+# Function to plot epochs data and return a compressed Base64 image
+def plot_epochs_data(epochs, event_id):
+    fig = epochs.plot(n_channels=64, scalings='auto', events=epochs.events, event_id=event_id, title="Epochs with Event Markers", show=False)
+    img_base64 = resize_image(fig)
+    return img_base64
 
 def predict_eeg(file_path):
     try:
@@ -76,11 +123,17 @@ def home():
 def login():
     return render_template('login.html')
 
-@app.route('/homepage')
+@app.route('/homepage', methods=['GET', 'POST'])
 def homepage():
-    # Make sure to handle session for username
-    username = session.get('username', 'Guest')  # Default to 'Guest' if not logged in
-    return render_template('homepage.html', username=username)
+    username = session.get('username', 'Guest')
+    plot_epochs_base64 = session.pop('plot_epochs_base64', None)
+
+    return render_template(
+        'homepage.html',
+        username=username,
+        plot_epochs_base64=plot_epochs_base64
+    )
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -112,6 +165,9 @@ def predict():
         
         events = mne.find_events(raw, stim_channel= 'Marker')
         
+        # Generate the plot of the raw EEG data
+        plot_raw_base64 = plot_raw_data(raw, file.filename, events)
+        
         raw.filter(l_freq=1.0, h_freq=30.0)
         
         unique_event_id = events[0, 2]
@@ -132,6 +188,13 @@ def predict():
         # Convert the data to a NumPy array (selecting the required channels)
         eeg_data = epochs.get_data()[:, :64, :]  # Select only the first 64 channels (adjust if necessary)
         print(f"EEG data shape for uploaded file: {eeg_data.shape}")
+        
+        # Generate the plot of the epochs data
+        plot_epochs_base64 = plot_epochs_data(epochs, event_id)
+        
+        # Store the plot images in the session
+        session['plot_raw_base64'] = plot_raw_base64
+        session['plot_epochs_base64'] = plot_epochs_base64
 
         # Reshape data for CNN (1, num_channels, num_timepoints)
         if eeg_data.ndim == 3:
@@ -158,13 +221,14 @@ def predict():
             'success': True,
             'predicted_subject': predicted_subject,
             'uploaded_filename': file.filename,
-            'message': 'Login  successful'
+            'message': 'Login successful'
         }, 200
 
     except Exception as e:
         print(f"Error in prediction for uploaded file: {str(e)}")
         return {'error': str(e)}, 500
     
+
 
 
 if __name__ == '__main__':
