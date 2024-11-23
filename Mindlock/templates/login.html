@@ -6,7 +6,7 @@
     <title>Mindlock Authentication System</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
     <style>
-        /* Loading Modal Styles */
+        /* Modal and video styles */
         .loading-modal {
             display: none; /* Hidden by default */
             position: fixed;
@@ -26,6 +26,52 @@
             border-radius: 5px;
             text-align: center;
             font-size: 18px;
+        }
+
+        .video-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .video-container video {
+            margin: 10px;
+            display: none;
+        }
+
+        .processing-text {
+            font-size: 20px;
+            margin-top: 10px;
+        }
+
+        #proceedButton {
+            display: none;
+            margin-top: 20px;
+        }
+
+        /* Modal for video */
+        .video-popup {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 10000;
+            text-align: center;
+        }
+
+        .video-popup video {
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 10px;
+        }
+
+        /* Style for buttons to appear beside each other */
+        .button-container {
+            display: flex;
+            gap: 10px; /* Space between the buttons */
         }
     </style>
 </head>
@@ -48,10 +94,15 @@
             <input type="file" id="fileUpload" name="fileUpload" accept=".fif" required>
             <span class="file-upload-text">.fif file only</span>
             <span id="fileError" class="error"></span>
-            <button type="submit">Submit</button>
+            <div class="button-container">
+                <button type="button" id="vepButton">VEP</button>
+                <button type="button" id="sepButton">SEP</button>
+            </div>
+            <button type="submit" id="submitButton">Submit</button>
             <span id="loginMessage" class="error">{{ get_flashed_messages() }}</span>
         </form>
     </div>
+
     <!-- Pop-up Modal for Loading -->
     <div id="loadingModal" class="modal" style="display: none;">
         <div class="modal-content">
@@ -60,69 +111,122 @@
         </div>
     </div>
 
-    <!-- Pop-up Modal -->
-    <div id="fileModal" class="modal">
-        <div class="modal-content">
-            <p>Only .fif files are allowed.</p>
-            <button id="closeModal">Close</button>
-        </div>
+    <!-- Pop-up Modal for Video Playback -->
+    <div id="videoPopup" class="video-popup">
+        <video id="videoClip" controls>
+            <source id="videoSource" src="" type="video/mp4">
+        </video>
+        <div id="processingText" class="processing-text">Processing...</div>
+        <button id="proceedButton" onclick="proceedWithPrediction()">Proceed</button>
     </div>
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            const username = document.getElementById('username').value.trim();
-            const fileInput = document.getElementById('fileUpload').files[0];
 
-            // Validate form inputs
-            if (!username || !fileInput || fileInput.name.split('.').pop().toLowerCase() !== 'fif') {
-                document.getElementById('loginMessage').textContent = 'Please enter a valid username and upload a .fif file.';
+    <script>
+        // Array of videos for VEP
+        const vepVideos = [
+            '/static/VEP-vids/bigdog.mp4',
+            '/static/VEP-vids/smalldog.mp4',
+            '/static/VEP-vids/cat.mp4'
+        ];
+    
+        // Video for AEP
+        const aepVideo = '/static/AEP-vid/AEP-sound.mp4';
+    
+        let selectedVideo = ''; // Variable to store the selected video
+        let selectedType = '';  // To track whether VEP or AEP is selected
+    
+        // Shuffle videos when VEP button is clicked
+        document.getElementById('vepButton').addEventListener('click', function () {
+            selectedVideo = vepVideos[Math.floor(Math.random() * vepVideos.length)];
+            selectedType = 'VEP';
+            console.log('Selected VEP Video:', selectedVideo);
+        });
+    
+        // Set AEP video when AEP button is clicked
+        document.getElementById('sepButton').addEventListener('click', function () {
+            selectedVideo = aepVideo;
+            selectedType = 'AEP';
+            console.log('Selected AEP Video:', selectedVideo);
+        });
+    
+        // Handle form submission to show video popup
+        document.getElementById('loginForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+    
+            if (!selectedVideo || !selectedType) {
+                alert('Please select a video type by clicking the VEP or AEP button.');
                 return;
             }
-
-            // Show loading modal immediately after submit
+    
+            // Set video source and display the popup
+            const videoElement = document.getElementById('videoClip');
+            const videoSource = document.getElementById('videoSource');
+            const videoPopup = document.getElementById('videoPopup');
+            const proceedButton = document.getElementById('proceedButton');
+    
+            videoSource.src = selectedVideo;
+            videoElement.load();
+            videoPopup.style.display = 'block';
+    
+            // Play the video and handle "onended" event
+            videoElement.play();
+            proceedButton.style.display = 'none';
+    
+            videoElement.onended = function () {
+                document.getElementById('processingText').textContent = 'Processing...';
+                proceedButton.style.display = 'block';
+            };
+        });
+    
+        // Proceed button functionality
+        document.getElementById('proceedButton').addEventListener('click', async function () {
+            // Hide the video popup
+            document.getElementById('videoPopup').style.display = 'none';
+    
+            const username = document.getElementById('username').value.trim();
+            const fileInput = document.getElementById('fileUpload').files[0];
+    
+            // Validate form inputs
+            if (!username || !fileInput || fileInput.name.split('.').pop().toLowerCase() !== 'fif') {
+                alert('Please enter a valid username and upload a .fif file.');
+                return;
+            }
+    
+            // Show loading modal
             document.getElementById('loadingModal').style.display = 'flex';
-
+    
             // Prepare the form data
             const formData = new FormData();
             formData.append('username', username);
             formData.append('file', fileInput);
-
+            formData.append('type', selectedType); // Pass the selected type (VEP or AEP)
+    
             try {
                 const response = await fetch('http://127.0.0.1:5000/predict', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
                 });
                 const result = await response.json();
-            
+    
                 if (result.success) {
                     if (result.predicted_subject === username) {
-                        window.location.href = "{{ url_for('homepage') }}"; // Redirect to homepage
-                        document.getElementById('loginMessage').textContent = result.message || 'Login successful'
-                        setTimeout(() => {
-                            window.location.href = "{{ url_for('homepage') }}"; // Redirect to homepage after a short delay
-                        }, 2000); // Delay of 2 seconds (2000 milliseconds)
+                        alert(result.message || 'Login successful');
+                        window.location.href = "{{ url_for('homepage') }}";
                     } else {
-                        document.getElementById('loginMessage').textContent = 'Intruder detected. Username does not match predicted subject.';
+                        alert('Intruder detected. Username does not match predicted subject.');
                     }
                 } else {
-                    document.getElementById('loginMessage').textContent = result.message || 'Login unsuccessful';
+                    alert(result.message || 'Login unsuccessful');
                 }
             } catch (error) {
-                document.getElementById('loginMessage').textContent = 'Error: Unable to authenticate. Please try again.';
+                alert('Error: Unable to authenticate. Please try again.');
                 console.error('Error:', error);
             } finally {
-                // Hide loading modal once process is complete
+                // Hide the loading modal
                 document.getElementById('loadingModal').style.display = 'none';
             }
-            
-        });
-
-        // Modal handling
-        document.getElementById('closeModal').addEventListener('click', function() {
-            document.getElementById('fileModal').style.display = 'none';
-            document.getElementById('username').value = '';  // Clear the username input
-            document.getElementById('fileUpload').value = '';  // Clear the file input
         });
     </script>
+    
+    
 </body>
 </html>
