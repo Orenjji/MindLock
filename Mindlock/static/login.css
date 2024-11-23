@@ -118,6 +118,50 @@ button:hover {
     margin-bottom: 10px;
 }
 
+/* Style for the loading modal */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Black background with opacity */
+}
+
+/* Modal content */
+.modal-content {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    width: 300px;
+    box-sizing: border-box;
+}
+
+/* The spinner itself */
+.spinner {
+    border: 4px solid rgba(255, 255, 255, 0.3); /* White border with transparency */
+    border-top: 4px solid #3498db; /* Blue top border for spinning effect */
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 2s linear infinite; /* Spin animation */
+    margin-bottom: 10px;
+}
+
+/* Spinner animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+
 /* Modal Styles */
 .modal {
     display: none;
