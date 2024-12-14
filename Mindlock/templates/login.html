@@ -116,11 +116,41 @@
         <video id="videoClip" controls>
             <source id="videoSource" src="" type="video/mp4">
         </video>
-        <div id="processingText" class="processing-text">Processing...</div>
+        <div id="processingText" class="processing-text">Capturing EEG data...</div>
         <button id="proceedButton" onclick="proceedWithPrediction()">Proceed</button>
     </div>
 
+    <!-- Custom Alert Modal -->
+    <div id="alertModal" class="alert-modal">
+        <p id="alertMessage">Alert Message</p>
+        <button id="alertCloseButton">OK</button>
+    </div>
+
+
     <script>
+        // Custom Alert Function
+        function showAlert(message) {
+            const alertModal = document.getElementById('alertModal');
+            const alertMessage = document.getElementById('alertMessage');
+            const closeButton = document.getElementById('alertCloseButton');
+
+            // Set the message and display the modal
+            alertMessage.textContent = message;
+            alertModal.style.display = 'block';
+
+            // Close button event listener
+            closeButton.onclick = function () {
+                alertModal.style.display = 'none';
+            };
+
+            // Close modal when clicking outside
+            window.onclick = function (event) {
+                if (event.target === alertModal) {
+                    alertModal.style.display = 'none';
+                }
+            };
+        }
+
         // Array of videos for VEP
         const vepVideos = [
             '/static/VEP-vids/bigdog.mp4',
@@ -153,7 +183,7 @@
             event.preventDefault();
     
             if (!selectedVideo || !selectedType) {
-                alert('Please select a video type by clicking the VEP or AEP button.');
+                showAlert('Please select a video type by clicking the VEP or AEP button.');
                 return;
             }
     
@@ -172,7 +202,7 @@
             proceedButton.style.display = 'none';
     
             videoElement.onended = function () {
-                document.getElementById('processingText').textContent = 'Processing...';
+                document.getElementById('processingText').textContent = 'Capturing EEG data...';
                 proceedButton.style.display = 'block';
             };
         });
@@ -187,7 +217,7 @@
     
             // Validate form inputs
             if (!username || !fileInput || fileInput.name.split('.').pop().toLowerCase() !== 'fif') {
-                alert('Please enter a valid username and upload a .fif file.');
+                showAlert('Please enter a valid username and upload a .fif file.');
                 return;
             }
     
@@ -209,16 +239,16 @@
     
                 if (result.success) {
                     if (result.predicted_subject === username) {
-                        alert(result.message || 'Login successful');
+                        showAlert(result.message || 'Login successful');
                         window.location.href = "{{ url_for('homepage') }}";
                     } else {
-                        alert('Intruder detected. Username does not match predicted subject.');
+                        showAlert('Intruder detected. Username does not match predicted subject.');
                     }
                 } else {
-                    alert(result.message || 'Login unsuccessful');
+                    showAlert(result.message || 'Login unsuccessful');
                 }
             } catch (error) {
-                alert('Error: Unable to authenticate. Please try again.');
+                showAlert('Error: Unable to authenticate. Please try again.');
                 console.error('Error:', error);
             } finally {
                 // Hide the loading modal

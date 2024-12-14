@@ -27,7 +27,7 @@ h1 {
 
 .Login_Container {
     position: absolute;
-    top: 22%;
+    top: 20%;
     background-color: rgb(255, 255, 255); 
     padding: 10px 15px 30px 15px;
     border-radius: 15px;
@@ -42,7 +42,7 @@ h1 {
 
 .Registration_Container {
     position: absolute;
-    top: 22%;
+    top: 20%;
     margin-left: 70px;
     background-color: rgba(255, 255, 255, 0.884); 
     padding: 10px 20px 30px 20px;
@@ -216,3 +216,40 @@ button:hover {
     border-radius: 5px;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
+
+/* Custom Alert Modal */
+.alert-modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10001;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    text-align: center;
+    width: 80%;
+    max-width: 400px;
+}
+
+.alert-modal p {
+    margin: 0 0 20px;
+    font-size: 18px;
+}
+
+.alert-modal button {
+    background-color: #3498DB;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.alert-modal button:hover {
+    background-color: #1ABC9C;
+}
+
