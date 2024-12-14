@@ -12,8 +12,8 @@ app = Flask(__name__, static_folder='mindlock/static', template_folder='mindlock
 CORS(app)  # Enable CORS
 
 # Load pre-trained models
-cnn_model_path = r'C:\Users\Admin\Downloads\for-train-model-1.keras'
-svm_model_path = r'C:\Users\Admin\Downloads\for-train-svm_model.pkl'
+cnn_model_path = r'C:\Users\Vehuel\Downloads\Mindlock\for-train-model-1.keras'
+svm_model_path = r'C:\Users\Vehuel\Downloads\Mindlock\for-train-svm_model.pkl'
 
 try:
     cnn_model = load_model(cnn_model_path)
