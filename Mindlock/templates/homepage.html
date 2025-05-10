@@ -9,6 +9,15 @@
 <body>
     <header>
         <h1>Welcome, {{ username }}, to Mindlock!</h1><!--sample of welcome user-->
+        
     </header>
+    {% if plot_raw_base64 %}
+        <img src="data:image/png;base64,{{ plot_raw_base64 }}" alt="Raw EEG Plot"/>
+    {% endif %}
+
+    {% if plot_epochs_base64 %}
+        <img src="data:image/png;base64,{{ plot_epochs_base64 }}" alt="Epochs Plot"/>
+    {% endif %}
+
 </body>
 </html>
